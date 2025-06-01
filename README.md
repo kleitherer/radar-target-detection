@@ -49,3 +49,57 @@ Step 3:  Convert polar coordinates to cartesian for 2D plot of target locations.
 
     - Iterate through each point in the point cloud list, which contains range, velocity, and angle.
     - Convert polar coordinates (range, angle) to cartesian coordinates (x, y).
+
+    
+## Part C: DOA Algorithm for any antenna pattern.
+
+Before in part b, we processed the DOA of every detected target cell by taking the FFT of the range-Doppler across the antenna dimension.
+However, this only worked for uniform linear array (ULA) where elements are equally spaced. We are expanding on this DOA estimation 
+to work with any arbitrary 1D array (also, note that because this is 1D, the following algorithm is only for azimuth estimation, not elevation.)
+
+### The algorithm: 
+
+The phase of the received signal contains information about the direction of arrival (DOA). To extract this, we perform a grid search over many possible angles. For each candidate angle, we compute a steering vector which models the expected phase shifts across antennas if the target was located at that angle. We then compare these steering vectors to the actual received phases to estimate the target’s direction by taking the inner product (i.e. the correlation) between the two phases.
+
+    The problem specifies: 
+      - Number of candidate angles: N = 480
+      - Field of view: FOV = 120 degrees (angles range from -60° to +60°) 
+
+Step 1: Build the steering matrix A where each column correponds to a steering vector for a candidate angle θi.
+
+    The steering matrix A should have p rows (for each antenna) and N columns (for each candidate angle)
+    where p is the number of antennas and N is the number of candidate angles.
+    
+    The steering vector for each candidate angle θi is given by:
+    
+  $$
+  a_i = \exp\left(-j \cdot \frac{2\pi}{\lambda} \cdot r \cdot \sin(\theta_i)\right)
+  $$
+
+    where:
+      r = array of antenna positions (length p)
+      λ = wavelength
+      θᵢ = candidate angle in radians
+      
+    Loop through each candidate angle θᵢ, calculate the steering vector aᵢ, and store it as column i in matrix A.
+
+Step 2: Compute DOA spectrum.
+
+The DOA spectrum helps us answer how well a specific steering vector matches our measured data. To break this down using math, we begin with the dot product since it measures how aligned two vectors are. For the complex space, we need to use the conjugate transpose to account for phase shifts. Because we care about how strongly aligned they are, we need to take the magnitude (i.e. absolute value). The index with the largest magnitude indicates we have a certain angle that we can say is coming from the target. So the equation for each index in the DOA spectrum is:
+
+$$
+d_i = |(a_iᴴ * s) |
+$$
+
+    where:
+      a_iᴴ is the conjugate transpose of the steering vector at one of the 480 angles we estimate
+      s is the vector of measured phases.
+
+Step 3: Find the peak in the DOA spectrum.
+
+    Find the index within the DOA spectrum that has the highest magnitude.
+    This index is the angle at which the target is coming from.
+
+Step 4: Expand this algorithm for multiple targets.
+
+    Instead of finding one global maximum across the DOA spectrum, expand the search to include next highest correlation values.
