@@ -83,7 +83,7 @@ Step 1: Build the steering matrix A where each column correponds to a steering v
       
     Loop through each candidate angle θᵢ, calculate the steering vector aᵢ, and store it as column i in matrix A.
 
-Step 2: Compute DOA spectrum.
+Step 2: Compute DOA spectrum using a matched filter.
 
 The DOA spectrum helps us answer how well a specific steering vector matches our measured data. To break this down using math, we begin with the dot product since it measures how aligned two vectors are. For the complex space, we need to use the conjugate transpose to account for phase shifts. Because we care about how strongly aligned they are, we need to take the magnitude (i.e. absolute value). The index with the largest magnitude indicates we have a certain angle that we can say is coming from the target. So the equation for each index in the DOA spectrum is:
 
